@@ -142,8 +142,8 @@ export default function NutrientTracker() {
     useEffect(() => {
         setIsClient(true);
         try {
-            const savedData = sessionStorage.getItem('nutrientTrackerData');
-            const savedOrder = sessionStorage.getItem('nutrientTrackerOrder');
+            const savedData = localStorage.getItem('nutrientTrackerData');
+            const savedOrder = localStorage.getItem('nutrientTrackerOrder');
             if (savedData) {
                 setTrackerData(JSON.parse(savedData));
             }
@@ -151,17 +151,17 @@ export default function NutrientTracker() {
                 setNutrientOrder(JSON.parse(savedOrder));
             }
         } catch (error) {
-            console.error('Could not load data from session storage:', error);
+            console.error('Could not load data from local storage:', error);
         }
     }, []);
 
     useEffect(() => {
         if (isClient) {
             try {
-                sessionStorage.setItem('nutrientTrackerData', JSON.stringify(trackerData));
-                sessionStorage.setItem('nutrientTrackerOrder', JSON.stringify(nutrientOrder));
+                localStorage.setItem('nutrientTrackerData', JSON.stringify(trackerData));
+                localStorage.setItem('nutrientTrackerOrder', JSON.stringify(nutrientOrder));
             } catch (error) {
-                console.error('Could not save data to session storage:', error);
+                console.error('Could not save data to local storage:', error);
             }
         }
     }, [trackerData, nutrientOrder, isClient]);
