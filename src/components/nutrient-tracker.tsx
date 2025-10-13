@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, type FC, type ReactElement } from 'react';
+import { useState, useEffect, type FC, type ReactElement, useRef } from 'react';
 import {
   Table,
   TableBody,
@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { Apple, Beef, Candy, Carrot, Egg, Droplets, Minus, Plus, RotateCcw, Wheat } from 'lucide-react';
+import { Apple, Beef, Candy, Carrot, Egg, Droplets, GripVertical, Minus, Plus, RotateCcw, Wheat } from 'lucide-react';
 
 type NutrientCategory = 'Agua' | 'Azucar' | 'Carbohidratos' | 'Proteina' | 'Fruta' | 'Grasa' | 'Vegetales';
 const DAYS_OF_WEEK = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'] as const;
@@ -37,12 +37,12 @@ const NUTRIENT_CONFIG: Record<NutrientCategory, { name: string; icon: ReactEleme
   Grasa: { name: 'Grasa', icon: <Egg className="h-5 w-5 text-muted-foreground" />, defaultMax: 2 },
   Vegetales: { name: 'Vegetales', icon: <Carrot className="h-5 w-5 text-muted-foreground" />, defaultMax: 5 },
 };
-const NUTRIENT_CATEGORIES = Object.keys(NUTRIENT_CONFIG) as NutrientCategory[];
+const INITIAL_NUTRIENT_CATEGORIES = Object.keys(NUTRIENT_CONFIG) as NutrientCategory[];
 
 
 const getInitialState = (): TrackerState => {
     const initialState: Partial<TrackerState> = {};
-    for (const category of NUTRIENT_CATEGORIES) {
+    for (const category of INITIAL_NUTRIENT_CATEGORIES) {
         const portions: Partial<Record<Day, number>> = {};
         for (const day of DAYS_OF_WEEK) {
             portions[day] = 0;
@@ -67,14 +67,16 @@ const NutrientTrackerSkeleton: FC = () => {
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead className="w-12"></TableHead>
                                 <TableHead className="min-w-[150px]"><Skeleton className="h-5 w-24" /></TableHead>
                                 <TableHead className="min-w-[120px]"><Skeleton className="h-5 w-24" /></TableHead>
                                 {DAYS_OF_WEEK.map(day => <TableHead key={day} className="text-center"><Skeleton className="h-5 w-16" /></TableHead>)}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {NUTRIENT_CATEGORIES.map(category => (
+                            {INITIAL_NUTRIENT_CATEGORIES.map(category => (
                                 <TableRow key={category}>
+                                    <TableCell><Skeleton className="h-6 w-6" /></TableCell>
                                     <TableCell><Skeleton className="h-6 w-32" /></TableCell>
                                     <TableCell><Skeleton className="h-10 w-20" /></TableCell>
                                     {DAYS_OF_WEEK.map(day => (
@@ -107,9 +109,10 @@ const PortionCell: FC<{ count: number; max: number; onChange: (newCount: number)
     
     const getColorClass = () => {
         if (max === 0) return '';
-        if (count >= max) return 'bg-red-200/50';
-        if (count >= max - 1) return 'bg-yellow-200/50';
-        if (count < max - 1) return 'bg-green-200/50';
+        if (count > max) return 'bg-red-200/50';
+        if (count === max) return 'bg-red-200/50';
+        if (count >= max -1 && count < max) return 'bg-yellow-200/50';
+        if (count < max -1) return 'bg-green-200/50';
         return '';
     }
 
@@ -130,14 +133,22 @@ const PortionCell: FC<{ count: number; max: number; onChange: (newCount: number)
 
 export default function NutrientTracker() {
     const [trackerData, setTrackerData] = useState<TrackerState>(getInitialState());
+    const [nutrientOrder, setNutrientOrder] = useState<NutrientCategory[]>(INITIAL_NUTRIENT_CATEGORIES);
     const [isClient, setIsClient] = useState(false);
+    const dragItem = useRef<number | null>(null);
+    const dragOverItem = useRef<number | null>(null);
+
 
     useEffect(() => {
         setIsClient(true);
         try {
             const savedData = sessionStorage.getItem('nutrientTrackerData');
+            const savedOrder = sessionStorage.getItem('nutrientTrackerOrder');
             if (savedData) {
                 setTrackerData(JSON.parse(savedData));
+            }
+            if (savedOrder) {
+                setNutrientOrder(JSON.parse(savedOrder));
             }
         } catch (error) {
             console.error('Could not load data from session storage:', error);
@@ -148,11 +159,12 @@ export default function NutrientTracker() {
         if (isClient) {
             try {
                 sessionStorage.setItem('nutrientTrackerData', JSON.stringify(trackerData));
+                sessionStorage.setItem('nutrientTrackerOrder', JSON.stringify(nutrientOrder));
             } catch (error) {
                 console.error('Could not save data to session storage:', error);
             }
         }
-    }, [trackerData, isClient]);
+    }, [trackerData, nutrientOrder, isClient]);
 
     const handleMaxPortionChange = (category: NutrientCategory, value: string) => {
         const newMax = parseInt(value, 10);
@@ -177,7 +189,7 @@ export default function NutrientTracker() {
     const handleReset = () => {
         setTrackerData(prev => {
             const newState = { ...prev };
-            for (const category of NUTRIENT_CATEGORIES) {
+            for (const category of INITIAL_NUTRIENT_CATEGORIES) {
                 const newPortions: Partial<Record<Day, number>> = {};
                 for (const day of DAYS_OF_WEEK) {
                     newPortions[day] = 0;
@@ -190,6 +202,17 @@ export default function NutrientTracker() {
             return newState;
         });
     };
+    
+    const handleDragSort = () => {
+        if (dragItem.current === null || dragOverItem.current === null) return;
+        const newNutrientOrder = [...nutrientOrder];
+        const draggedItemContent = newNutrientOrder.splice(dragItem.current, 1)[0];
+        newNutrientOrder.splice(dragOverItem.current, 0, draggedItemContent);
+        dragItem.current = null;
+        dragOverItem.current = null;
+        setNutrientOrder(newNutrientOrder);
+    };
+
 
     if (!isClient) {
         return <NutrientTrackerSkeleton />;
@@ -206,6 +229,7 @@ export default function NutrientTracker() {
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead className="w-12"></TableHead>
                                 <TableHead className="font-bold min-w-[180px] text-base">Nutriente</TableHead>
                                 <TableHead className="font-bold min-w-[140px] text-base">Porciones Máx.</TableHead>
                                 {DAYS_OF_WEEK.map(day => (
@@ -214,8 +238,19 @@ export default function NutrientTracker() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {NUTRIENT_CATEGORIES.map(category => (
-                                <TableRow key={category}>
+                            {nutrientOrder.map((category, index) => (
+                                <TableRow 
+                                    key={category}
+                                    draggable
+                                    onDragStart={() => dragItem.current = index}
+                                    onDragEnter={() => dragOverItem.current = index}
+                                    onDragEnd={handleDragSort}
+                                    onDragOver={(e) => e.preventDefault()}
+                                    className="cursor-grab active:cursor-grabbing"
+                                >
+                                    <TableCell className="text-center">
+                                        <GripVertical className="h-5 w-5 text-muted-foreground" />
+                                    </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-3">
                                             {NUTRIENT_CONFIG[category].icon}
