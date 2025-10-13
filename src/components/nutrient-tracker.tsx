@@ -11,11 +11,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { Apple, Beef, Candy, Carrot, Egg, Droplets, GripVertical, Minus, Plus, RotateCcw, Wheat } from 'lucide-react';
+import { Apple, Beef, Candy, Carrot, Droplets, Egg, GripVertical, Minus, Plus, RotateCcw, Wheat } from 'lucide-react';
 
 type NutrientCategory = 'Agua' | 'Azucar' | 'Carbohidratos' | 'Proteina' | 'Fruta' | 'Grasa' | 'Vegetales';
 const DAYS_OF_WEEK = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'] as const;
@@ -30,12 +29,12 @@ type TrackerState = Record<NutrientCategory, NutrientData>;
 
 const NUTRIENT_CONFIG: Record<NutrientCategory, { name: string; icon: ReactElement; defaultMax: number }> = {
   Agua: { name: 'Agua', icon: <Droplets className="h-5 w-5 text-muted-foreground" />, defaultMax: 8 },
-  Azucar: { name: 'Azúcar', icon: <Candy className="h-5 w-5 text-muted-foreground" />, defaultMax: 2 },
+  Azucar: { name: 'Azúcar', icon: <Candy className="h-5 w-5 text-muted-foreground" />, defaultMax: 0 },
   Carbohidratos: { name: 'Carbohidratos', icon: <Wheat className="h-5 w-5 text-muted-foreground" />, defaultMax: 5 },
-  Proteina: { name: 'Proteína', icon: <Beef className="h-5 w-5 text-muted-foreground" />, defaultMax: 4 },
+  Proteina: { name: 'Proteína', icon: <Beef className="h-5 w-5 text-muted-foreground" />, defaultMax: 12 },
   Fruta: { name: 'Fruta', icon: <Apple className="h-5 w-5 text-muted-foreground" />, defaultMax: 3 },
   Grasa: { name: 'Grasa', icon: <Egg className="h-5 w-5 text-muted-foreground" />, defaultMax: 2 },
-  Vegetales: { name: 'Vegetales', icon: <Carrot className="h-5 w-5 text-muted-foreground" />, defaultMax: 5 },
+  Vegetales: { name: 'Vegetales', icon: <Carrot className="h-5 w-5 text-muted-foreground" />, defaultMax: 4 },
 };
 const INITIAL_NUTRIENT_CATEGORIES = Object.keys(NUTRIENT_CONFIG) as NutrientCategory[];
 
@@ -110,9 +109,8 @@ const PortionCell: FC<{ count: number; max?: number; onChange: (newCount: number
     const getColorClass = () => {
         if (max === undefined) return '';
         if (max === 0) return '';
-        if (count > max) return 'bg-red-200/50';
         if (count === max) return 'bg-red-200/50';
-        if (count >= max -1 && count < max) return 'bg-yellow-200/50';
+        if (count === max -1) return 'bg-yellow-200/50';
         if (count < max -1) return 'bg-green-200/50';
         return '';
     }
@@ -287,5 +285,3 @@ export default function NutrientTracker() {
         </Card>
     );
 }
-
-    
