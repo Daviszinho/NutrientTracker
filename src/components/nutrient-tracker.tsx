@@ -10,12 +10,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { Apple, Beef, Candy, Carrot, Egg, Droplets, Minus, Plus, Wheat } from 'lucide-react';
+import { Apple, Beef, Candy, Carrot, Egg, Droplets, Minus, Plus, RotateCcw, Wheat } from 'lucide-react';
 
 type NutrientCategory = 'Agua' | 'Azucar' | 'Carbohidratos' | 'Proteina' | 'Fruta' | 'Grasa' | 'Vegetales';
 const DAYS_OF_WEEK = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'] as const;
@@ -174,6 +174,23 @@ export default function NutrientTracker() {
         }));
     };
 
+    const handleReset = () => {
+        setTrackerData(prev => {
+            const newState = { ...prev };
+            for (const category of NUTRIENT_CATEGORIES) {
+                const newPortions: Partial<Record<Day, number>> = {};
+                for (const day of DAYS_OF_WEEK) {
+                    newPortions[day] = 0;
+                }
+                newState[category] = {
+                    ...newState[category],
+                    portions: newPortions as Record<Day, number>,
+                };
+            }
+            return newState;
+        });
+    };
+
     if (!isClient) {
         return <NutrientTrackerSkeleton />;
     }
@@ -230,8 +247,12 @@ export default function NutrientTracker() {
                     </Table>
                 </div>
             </CardContent>
+            <CardFooter className="flex justify-end">
+                <Button onClick={handleReset} variant="outline">
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Resetear
+                </Button>
+            </CardFooter>
         </Card>
     );
 }
-
-    
