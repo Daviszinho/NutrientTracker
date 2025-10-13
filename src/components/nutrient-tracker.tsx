@@ -98,7 +98,7 @@ const NutrientTrackerSkeleton: FC = () => {
     );
 }
 
-const PortionCell: FC<{ count: number; max: number; onChange: (newCount: number) => void }> = ({ count, max, onChange }) => {
+const PortionCell: FC<{ count: number; max?: number; onChange: (newCount: number) => void }> = ({ count, max, onChange }) => {
     const [highlight, setHighlight] = useState(false);
 
     const handleChange = (newCount: number) => {
@@ -108,6 +108,7 @@ const PortionCell: FC<{ count: number; max: number; onChange: (newCount: number)
     };
     
     const getColorClass = () => {
+        if (max === undefined) return '';
         if (max === 0) return '';
         if (count > max) return 'bg-red-200/50';
         if (count === max) return 'bg-red-200/50';
@@ -166,9 +167,8 @@ export default function NutrientTracker() {
         }
     }, [trackerData, nutrientOrder, isClient]);
 
-    const handleMaxPortionChange = (category: NutrientCategory, value: string) => {
-        const newMax = parseInt(value, 10);
-        if (!isNaN(newMax) && newMax >= 0) {
+    const handleMaxPortionChange = (category: NutrientCategory, newMax: number) => {
+        if (newMax >= 0) {
             setTrackerData(prev => ({
                 ...prev,
                 [category]: { ...prev[category], maxPortions: newMax },
@@ -258,13 +258,9 @@ export default function NutrientTracker() {
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <Input
-                                            type="number"
-                                            min="0"
-                                            value={trackerData[category].maxPortions}
-                                            onChange={(e) => handleMaxPortionChange(category, e.target.value)}
-                                            className="w-24 h-10"
-                                            aria-label={`Max portions for ${category}`}
+                                        <PortionCell
+                                            count={trackerData[category].maxPortions}
+                                            onChange={(newCount) => handleMaxPortionChange(category, newCount)}
                                         />
                                     </TableCell>
                                     {DAYS_OF_WEEK.map(day => (
@@ -291,3 +287,5 @@ export default function NutrientTracker() {
         </Card>
     );
 }
+
+    
