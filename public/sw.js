@@ -75,9 +75,13 @@ define(['./workbox-7144475a'], (function (workbox) { 'use strict';
   workbox.registerRoute("/", new workbox.NetworkFirst({
     "cacheName": "start-url",
     plugins: [{
-      cacheWillUpdate: function (_) {
-        return _ref.apply(this, arguments);
-      }
+      cacheWillUpdate: async ({
+        response: e
+      }) => e && "opaqueredirect" === e.type ? new Response(e.body, {
+        status: 200,
+        statusText: "OK",
+        headers: e.headers
+      }) : e
     }]
   }), 'GET');
   workbox.registerRoute(/.*/i, new workbox.NetworkOnly({
