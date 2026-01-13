@@ -3,12 +3,12 @@
 
 import { useState, useEffect, type FC, type ReactElement, useRef } from 'react';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,20 +21,20 @@ const DAYS_OF_WEEK = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sá
 type Day = (typeof DAYS_OF_WEEK)[number];
 
 interface NutrientData {
-  maxPortions: number;
-  portions: Record<Day, number>;
+    maxPortions: number;
+    portions: Record<Day, number>;
 }
 
 type TrackerState = Record<NutrientCategory, NutrientData>;
 
 const NUTRIENT_CONFIG: Record<NutrientCategory, { name: string; icon: ReactElement; defaultMax: number }> = {
-  Agua: { name: 'Agua', icon: <Droplets className="h-5 w-5 text-muted-foreground" />, defaultMax: 8 },
-  Azucar: { name: 'Azúcar', icon: <Candy className="h-5 w-5 text-muted-foreground" />, defaultMax: 0 },
-  Carbohidratos: { name: 'Carbohidratos', icon: <Wheat className="h-5 w-5 text-muted-foreground" />, defaultMax: 5 },
-  Proteina: { name: 'Proteína', icon: <Beef className="h-5 w-5 text-muted-foreground" />, defaultMax: 12 },
-  Fruta: { name: 'Fruta', icon: <Apple className="h-5 w-5 text-muted-foreground" />, defaultMax: 3 },
-  Grasa: { name: 'Grasa', icon: <Egg className="h-5 w-5 text-muted-foreground" />, defaultMax: 2 },
-  Vegetales: { name: 'Vegetales', icon: <Carrot className="h-5 w-5 text-muted-foreground" />, defaultMax: 4 },
+    Agua: { name: 'Agua', icon: <Droplets className="h-5 w-5 text-muted-foreground" />, defaultMax: 8 },
+    Azucar: { name: 'Azúcar', icon: <Candy className="h-5 w-5 text-muted-foreground" />, defaultMax: 0 },
+    Carbohidratos: { name: 'Carbohidratos', icon: <Wheat className="h-5 w-5 text-muted-foreground" />, defaultMax: 5 },
+    Proteina: { name: 'Proteína', icon: <Beef className="h-5 w-5 text-muted-foreground" />, defaultMax: 12 },
+    Fruta: { name: 'Fruta', icon: <Apple className="h-5 w-5 text-muted-foreground" />, defaultMax: 3 },
+    Grasa: { name: 'Grasa', icon: <Egg className="h-5 w-5 text-muted-foreground" />, defaultMax: 2 },
+    Vegetales: { name: 'Vegetales', icon: <Carrot className="h-5 w-5 text-muted-foreground" />, defaultMax: 4 },
 };
 const INITIAL_NUTRIENT_CATEGORIES = Object.keys(NUTRIENT_CONFIG) as NutrientCategory[];
 
@@ -105,13 +105,13 @@ const PortionCell: FC<{ count: number; max?: number; onChange: (newCount: number
         setHighlight(true);
         setTimeout(() => setHighlight(false), 300);
     };
-    
+
     const getColorClass = () => {
         if (max === undefined) return '';
         if (max === 0) return '';
         if (count === max) return 'bg-red-200/50';
-        if (count === max -1) return 'bg-yellow-200/50';
-        if (count < max -1) return 'bg-green-200/50';
+        if (count === max - 1) return 'bg-yellow-200/50';
+        if (count < max - 1) return 'bg-green-200/50';
         return '';
     }
 
@@ -200,7 +200,7 @@ export default function NutrientTracker() {
             return newState;
         });
     };
-    
+
     const handleDragSort = () => {
         if (dragItem.current === null || dragOverItem.current === null) return;
         const newNutrientOrder = [...nutrientOrder];
@@ -231,13 +231,21 @@ export default function NutrientTracker() {
                                 <TableHead className="font-bold min-w-[180px] text-base">Nutriente</TableHead>
                                 <TableHead className="font-bold min-w-[140px] text-base">Porciones Máx.</TableHead>
                                 {DAYS_OF_WEEK.map(day => (
-                                    <TableHead key={day} className="text-center font-bold min-w-[120px] text-base">{day}</TableHead>
+                                    <TableHead
+                                        key={day}
+                                        className={cn(
+                                            "text-center font-bold min-w-[120px] text-base",
+                                            isClient && day === DAYS_OF_WEEK[(new Date().getDay() + 6) % 7] ? "bg-sky-100/50 dark:bg-sky-900/30" : ""
+                                        )}
+                                    >
+                                        {day}
+                                    </TableHead>
                                 ))}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {nutrientOrder.map((category, index) => (
-                                <TableRow 
+                                <TableRow
                                     key={category}
                                     draggable
                                     onDragStart={() => dragItem.current = index}
@@ -262,7 +270,12 @@ export default function NutrientTracker() {
                                         />
                                     </TableCell>
                                     {DAYS_OF_WEEK.map(day => (
-                                        <TableCell key={day}>
+                                        <TableCell
+                                            key={day}
+                                            className={cn(
+                                                isClient && day === DAYS_OF_WEEK[(new Date().getDay() + 6) % 7] ? "bg-sky-100/50 dark:bg-sky-900/30" : ""
+                                            )}
+                                        >
                                             <PortionCell
                                                 count={trackerData[category].portions[day]}
                                                 max={trackerData[category].maxPortions}
