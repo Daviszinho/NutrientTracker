@@ -8,6 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { BellRing } from 'lucide-react';
+import type { TrackerState, NutrientCategory } from './main-app';
+import { NUTRIENT_CONFIG } from './main-app';
+import { PortionCell } from './portion-cell';
 
 interface Meal {
     id: 'breakfast' | 'lunch' | 'dinner';
@@ -26,7 +29,14 @@ declare class TimestampTrigger {
     constructor(timestamp: number);
 }
 
-const Configuration: FC = () => {
+interface ConfigurationProps {
+    trackerData: TrackerState;
+    handleMaxPortionChange: (category: NutrientCategory, newMax: number) => void;
+    nutrientOrder: NutrientCategory[];
+    isClient: boolean;
+}
+
+const Configuration: FC<ConfigurationProps> = ({ trackerData, handleMaxPortionChange, nutrientOrder, isClient: dataIsReady }) => {
     const { toast } = useToast();
     const [meals, setMeals] = useState<Meal[]>([]);
     const [permission, setPermission] = useState<NotificationPermission>('default');
@@ -127,88 +137,130 @@ const Configuration: FC = () => {
         setMeals(prevMeals => prevMeals.map(meal => (meal.id === id ? { ...meal, enabled } : meal)));
     };
     
-    if (!isClient) {
+    if (!isClient && !dataIsReady) {
         return <Card className="mt-4"><CardHeader><CardTitle>Cargando configuración...</CardTitle></CardHeader></Card>;
     }
     
-    if (!isSupported) {
-        return (
-            <Card className="mt-4">
+    return (
+       <>
+            <Card className="mt-4 w-full">
                 <CardHeader>
-                    <CardTitle>Notificaciones no disponibles</CardTitle>
+                    <CardTitle>Configuración de Notificaciones</CardTitle>
                     <CardDescription>
-                        Tu navegador no soporta las notificaciones programadas. Por favor, intenta con una versión reciente de Chrome o Edge.
+                        Recibe un recordatorio a la hora de cada comida para registrar tus porciones.
+                        {permission === 'granted' && " Las notificaciones están activas."}
+                        {permission === 'denied' && " Las notificaciones están bloqueadas por el navegador."}
                     </CardDescription>
                 </CardHeader>
-            </Card>
-        );
-    }
-
-    return (
-        <Card className="mt-4 w-full">
-            <CardHeader>
-                <CardTitle>Configuración de Notificaciones</CardTitle>
-                <CardDescription>
-                    Recibe un recordatorio a la hora de cada comida para registrar tus porciones.
-                    {permission === 'granted' && " Las notificaciones están activas."}
-                    {permission === 'denied' && " Las notificaciones están bloqueadas por el navegador."}
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-                {permission !== 'granted' && (
-                    <div className="flex items-center space-x-2 rounded-lg border p-4">
-                        <BellRing className="h-6 w-6" />
-                        <div className="flex-grow">
-                            <p className="font-medium">Activar recordatorios</p>
-                            <p className="text-sm text-muted-foreground">
-                                {permission === 'default'
-                                    ? 'Necesitamos tu permiso para enviarte notificaciones.'
-                                    : 'Las notificaciones están bloqueadas. Habilítalas en la configuración de tu navegador.'}
-                            </p>
-                        </div>
-                        {permission === 'default' && (
-                            <Button onClick={handleRequestPermission}>Permitir</Button>
-                        )}
-                    </div>
+                {isSupported ? (
+                    <>
+                        <CardContent className="space-y-6">
+                            {permission !== 'granted' && (
+                                <div className="flex items-center space-x-2 rounded-lg border p-4">
+                                    <BellRing className="h-6 w-6" />
+                                    <div className="flex-grow">
+                                        <p className="font-medium">Activar recordatorios</p>
+                                        <p className="text-sm text-muted-foreground">
+                                            {permission === 'default'
+                                                ? 'Necesitamos tu permiso para enviarte notificaciones.'
+                                                : 'Las notificaciones están bloqueadas. Habilítalas en la configuración de tu navegador.'}
+                                        </p>
+                                    </div>
+                                    {permission === 'default' && (
+                                        <Button onClick={handleRequestPermission}>Permitir</Button>
+                                    )}
+                                </div>
+                            )}
+                            
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Comida</TableHead>
+                                        <TableHead>Hora</TableHead>
+                                        <TableHead className="text-right">Activar</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {meals.map((meal) => (
+                                        <TableRow key={meal.id}>
+                                            <TableCell className="font-medium">{meal.name}</TableCell>
+                                            <TableCell>
+                                                <Input
+                                                    type="time"
+                                                    value={meal.time}
+                                                    onChange={(e) => handleTimeChange(meal.id, e.target.value)}
+                                                    className="w-[120px]"
+                                                />
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <Switch
+                                                    checked={meal.enabled}
+                                                    onCheckedChange={(checked) => handleToggleChange(meal.id, checked)}
+                                                />
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                        <CardFooter className="flex justify-end">
+                            <Button onClick={handleSaveChanges} disabled={permission !== 'granted'}>
+                                Guardar Cambios
+                            </Button>
+                        </CardFooter>
+                    </>
+                ) : (
+                    <CardContent>
+                         <CardDescription>
+                            Tu navegador no soporta las notificaciones programadas. Por favor, intenta con una versión reciente de Chrome o Edge.
+                        </CardDescription>
+                    </CardContent>
                 )}
-                
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Comida</TableHead>
-                            <TableHead>Hora</TableHead>
-                            <TableHead className="text-right">Activar</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {meals.map((meal) => (
-                            <TableRow key={meal.id}>
-                                <TableCell className="font-medium">{meal.name}</TableCell>
-                                <TableCell>
-                                    <Input
-                                        type="time"
-                                        value={meal.time}
-                                        onChange={(e) => handleTimeChange(meal.id, e.target.value)}
-                                        className="w-[120px]"
-                                    />
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <Switch
-                                        checked={meal.enabled}
-                                        onCheckedChange={(checked) => handleToggleChange(meal.id, checked)}
-                                    />
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-            <CardFooter className="flex justify-end">
-                <Button onClick={handleSaveChanges} disabled={permission !== 'granted'}>
-                    Guardar Cambios
-                </Button>
-            </CardFooter>
-        </Card>
+            </Card>
+
+            <Card className="mt-4 w-full">
+                 <CardHeader>
+                    <CardTitle>Porciones Máximas por Defecto</CardTitle>
+                    <CardDescription>
+                        Ajusta las porciones máximas recomendadas para cada nutriente.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {dataIsReady ? (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-1/2">Nutriente</TableHead>
+                                    <TableHead className="w-1/2 text-center">Porciones</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {nutrientOrder.map((category) => (
+                                    <TableRow key={category}>
+                                        <TableCell>
+                                            <div className="flex items-center gap-3">
+                                                {NUTRIENT_CONFIG[category].icon}
+                                                <span className="font-medium text-base">{NUTRIENT_CONFIG[category].name}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex justify-center">
+                                                <PortionCell
+                                                    count={trackerData[category].maxPortions}
+                                                    onChange={(newCount) => handleMaxPortionChange(category, newCount)}
+                                                />
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    ) : (
+                        <p>Cargando configuración...</p>
+                    )}
+                </CardContent>
+            </Card>
+       </>
     );
 };
 
