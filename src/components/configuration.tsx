@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { BellRing } from 'lucide-react';
+import { BellRing, Download } from 'lucide-react';
 import type { TrackerState, NutrientCategory } from './main-app';
 import { NUTRIENT_CONFIG } from './main-app';
 import { PortionCell } from './portion-cell';
@@ -34,9 +34,11 @@ interface ConfigurationProps {
     handleMaxPortionChange: (category: NutrientCategory, newMax: number) => void;
     nutrientOrder: NutrientCategory[];
     isClient: boolean;
+    installPrompt: Event | null;
+    handleInstallClick: () => void;
 }
 
-const Configuration: FC<ConfigurationProps> = ({ trackerData, handleMaxPortionChange, nutrientOrder, isClient: dataIsReady }) => {
+const Configuration: FC<ConfigurationProps> = ({ trackerData, handleMaxPortionChange, nutrientOrder, isClient: dataIsReady, installPrompt, handleInstallClick }) => {
     const { toast } = useToast();
     const [meals, setMeals] = useState<Meal[]>([]);
     const [permission, setPermission] = useState<NotificationPermission>('default');
@@ -143,6 +145,23 @@ const Configuration: FC<ConfigurationProps> = ({ trackerData, handleMaxPortionCh
     
     return (
        <>
+            {installPrompt && (
+                <Card className="mt-4 w-full">
+                    <CardHeader>
+                        <CardTitle>Instalar Aplicación</CardTitle>
+                        <CardDescription>
+                            Instala esta aplicación en tu dispositivo para un acceso más rápido y uso sin conexión.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Button onClick={handleInstallClick}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Instalar Aplicación
+                        </Button>
+                    </CardContent>
+                </Card>
+            )}
+
             <Card className="mt-4 w-full">
                 <CardHeader>
                     <CardTitle>Configuración de Notificaciones</CardTitle>

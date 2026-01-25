@@ -51,6 +51,7 @@ export default function MainApp() {
     const [isClient, setIsClient] = useState(false);
     const dragItem = useRef<number | null>(null);
     const dragOverItem = useRef<number | null>(null);
+    const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
 
 
     useEffect(() => {
@@ -79,6 +80,25 @@ export default function MainApp() {
             }
         }
     }, [trackerData, nutrientOrder, isClient]);
+
+    useEffect(() => {
+        const handleBeforeInstallPrompt = (e: Event) => {
+            e.preventDefault();
+            setInstallPrompt(e);
+        };
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        return () => {
+            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        };
+    }, []);
+
+    const handleInstallClick = () => {
+        if (!installPrompt) return;
+        (installPrompt as any).prompt();
+        (installPrompt as any).userChoice.then(() => {
+            setInstallPrompt(null);
+        });
+    };
 
     const handleMaxPortionChange = (category: NutrientCategory, newMax: number) => {
         if (newMax >= 0) {
@@ -152,6 +172,8 @@ export default function MainApp() {
                         nutrientOrder={nutrientOrder}
                         isClient={isClient}
                         handleMaxPortionChange={handleMaxPortionChange}
+                        installPrompt={installPrompt}
+                        handleInstallClick={handleInstallClick}
                     />
                 </TabsContent>
             </Tabs>
