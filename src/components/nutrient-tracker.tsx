@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, type FC, type ReactElement, useRef, MutableRefObject } from 'react';
+import Image from 'next/image';
 import {
     Table,
     TableBody,
@@ -17,6 +18,7 @@ import { GripVertical, RotateCcw } from 'lucide-react';
 import { PortionCell } from './portion-cell';
 import type { TrackerState, NutrientCategory } from './main-app';
 import { DAYS_OF_WEEK, NUTRIENT_CONFIG, INITIAL_NUTRIENT_CATEGORIES } from './main-app';
+import logo from '@/app/nt.png';
 
 type Day = (typeof DAYS_OF_WEEK)[number];
 
@@ -92,7 +94,10 @@ const NutrientTracker: FC<NutrientTrackerProps> = ({
     return (
         <Card className="w-full max-w-7xl shadow-lg">
             <CardHeader>
-                <CardTitle className="text-3xl font-headline">Nutrient Tracker</CardTitle>
+                <div className="flex items-center gap-4">
+                    <Image src={logo} alt="Nutrient Tracker Logo" width={40} height={40} />
+                    <CardTitle className="text-3xl font-headline">Nutrient Tracker</CardTitle>
+                </div>
                 <CardDescription>Marque sus porciones diarias para cada categoría de nutrientes a continuación.</CardDescription>
             </CardHeader>
             <CardContent>
