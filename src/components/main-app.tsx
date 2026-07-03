@@ -60,11 +60,30 @@ export default function MainApp() {
         try {
             const savedData = localStorage.getItem('nutrientTrackerData');
             const savedOrder = localStorage.getItem('nutrientTrackerOrder');
+            
             if (savedData) {
-                setTrackerData(JSON.parse(savedData));
+                const parsed = JSON.parse(savedData);
+                // Merge: add any new categories that don't exist in saved data
+                const merged = getInitialState();
+                for (const category of INITIAL_NUTRIENT_CATEGORIES) {
+                    if (parsed[category]) {
+                        merged[category] = parsed[category];
+                    }
+                }
+                setTrackerData(merged);
             }
+            
             if (savedOrder) {
-                setNutrientOrder(JSON.parse(savedOrder));
+                const parsed = JSON.parse(savedOrder);
+                // Add any new categories to the order that aren't in saved order
+                const allCategories = new Set(INITIAL_NUTRIENT_CATEGORIES);
+                const updatedOrder = parsed.filter((cat: NutrientCategory) => allCategories.has(cat));
+                for (const cat of INITIAL_NUTRIENT_CATEGORIES) {
+                    if (!updatedOrder.includes(cat)) {
+                        updatedOrder.push(cat);
+                    }
+                }
+                setNutrientOrder(updatedOrder);
             }
         } catch (error) {
             console.error('Could not load data from local storage:', error);
