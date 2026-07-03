@@ -60,22 +60,35 @@ export default function MainApp() {
         try {
             const savedData = localStorage.getItem('nutrientTrackerData');
             const savedOrder = localStorage.getItem('nutrientTrackerOrder');
-            
+
             if (savedData) {
                 const parsed = JSON.parse(savedData);
-                // Merge: add any new categories that don't exist in saved data
+                // Start from a clean initial state, then overlay saved values with strict validation
                 const merged = getInitialState();
                 for (const category of INITIAL_NUTRIENT_CATEGORIES) {
-                    if (parsed[category]) {
-                        merged[category] = parsed[category];
+                    const saved = parsed[category];
+                    if (saved && typeof saved === 'object') {
+                        // maxPortions: use saved value only if it's a valid non-negative number
+                        const savedMax = Number(saved.maxPortions);
+                        if (!isNaN(savedMax) && savedMax >= 0) {
+                            merged[category].maxPortions = savedMax;
+                        }
+                        // portions: validate each day individually
+                        if (saved.portions && typeof saved.portions === 'object') {
+                            for (const day of DAYS_OF_WEEK) {
+                                const savedPortion = Number(saved.portions[day]);
+                                merged[category].portions[day] = (!isNaN(savedPortion) && savedPortion >= 0)
+                                    ? savedPortion
+                                    : 0;
+                            }
+                        }
                     }
                 }
                 setTrackerData(merged);
             }
-            
+
             if (savedOrder) {
                 const parsed = JSON.parse(savedOrder);
-                // Add any new categories to the order that aren't in saved order
                 const allCategories = new Set(INITIAL_NUTRIENT_CATEGORIES);
                 const updatedOrder = parsed.filter((cat: NutrientCategory) => allCategories.has(cat));
                 for (const cat of INITIAL_NUTRIENT_CATEGORIES) {
