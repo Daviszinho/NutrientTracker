@@ -4,10 +4,10 @@ import { useState, useEffect, type FC, type ReactElement, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import NutrientTracker from '@/components/nutrient-tracker';
 import Configuration from '@/components/configuration';
-import { Apple, Beef, Candy, Carrot, Droplets, Egg, Wheat } from 'lucide-react';
+import { Apple, Beef, Candy, Carrot, Droplets, Egg, Wheat, Milk } from 'lucide-react';
 
 // Types and constants moved from NutrientTracker to be shared
-type NutrientCategory = 'Agua' | 'Azucar' | 'Carbohidratos' | 'Proteina' | 'Fruta' | 'Grasa' | 'Vegetales';
+export type NutrientCategory = 'Agua' | 'Azucar' | 'Carbohidratos' | 'Proteina' | 'Fruta' | 'Grasa' | 'Vegetales' | 'Lacteos';
 export const DAYS_OF_WEEK = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'] as const;
 type Day = (typeof DAYS_OF_WEEK)[number];
 
@@ -26,6 +26,7 @@ export const NUTRIENT_CONFIG: Record<NutrientCategory, { name: string; icon: Rea
     Fruta: { name: 'Fruta', icon: <Apple className="h-5 w-5 text-muted-foreground" />, defaultMax: 3 },
     Grasa: { name: 'Grasa', icon: <Egg className="h-5 w-5 text-muted-foreground" />, defaultMax: 2 },
     Vegetales: { name: 'Vegetales', icon: <Carrot className="h-5 w-5 text-muted-foreground" />, defaultMax: 4 },
+    Lacteos: { name: 'Lácteos', icon: <Milk className="h-5 w-5 text-muted-foreground" />, defaultMax: 2 },
 };
 export const INITIAL_NUTRIENT_CATEGORIES = Object.keys(NUTRIENT_CONFIG) as NutrientCategory[];
 

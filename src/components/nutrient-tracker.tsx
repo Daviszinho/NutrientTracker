@@ -24,7 +24,7 @@ type Day = (typeof DAYS_OF_WEEK)[number];
 
 const NutrientTrackerSkeleton: FC = () => {
     return (
-        <Card className="w-full max-w-7xl">
+        <Card className="w-full">
             <CardHeader>
                 <Skeleton className="h-8 w-48" />
                 <Skeleton className="h-4 w-64" />
@@ -34,21 +34,21 @@ const NutrientTrackerSkeleton: FC = () => {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-12"></TableHead>
-                                <TableHead className="min-w-[150px]"><Skeleton className="h-5 w-24" /></TableHead>
-                                <TableHead className="min-w-[120px]"><Skeleton className="h-5 w-24" /></TableHead>
-                                {DAYS_OF_WEEK.map(day => <TableHead key={day} className="text-center"><Skeleton className="h-5 w-16" /></TableHead>)}
+                                <TableHead className="sticky left-0 z-20 bg-background w-10"></TableHead>
+                                <TableHead className="sticky left-10 z-20 bg-background min-w-[120px]"><Skeleton className="h-5 w-24" /></TableHead>
+                                <TableHead className="sticky left-[170px] z-20 bg-background w-16"><Skeleton className="h-5 w-12" /></TableHead>
+                                {DAYS_OF_WEEK.map(day => <TableHead key={day} className="text-center min-w-[110px]"><Skeleton className="h-5 w-16" /></TableHead>)}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {INITIAL_NUTRIENT_CATEGORIES.map(category => (
                                 <TableRow key={category}>
-                                    <TableCell><Skeleton className="h-6 w-6" /></TableCell>
-                                    <TableCell><Skeleton className="h-6 w-32" /></TableCell>
-                                    <TableCell><Skeleton className="h-10 w-20" /></TableCell>
+                                    <TableCell className="sticky left-0 z-10 bg-background"><Skeleton className="h-6 w-6" /></TableCell>
+                                    <TableCell className="sticky left-10 z-10 bg-background"><Skeleton className="h-6 w-24" /></TableCell>
+                                    <TableCell className="sticky left-[170px] z-10 bg-background"><Skeleton className="h-10 w-12" /></TableCell>
                                     {DAYS_OF_WEEK.map(day => (
                                         <TableCell key={day} className="text-center">
-                                            <div className="flex justify-center items-center gap-2">
+                                            <div className="flex justify-center items-center gap-1">
                                                 <Skeleton className="h-8 w-8 rounded-md" />
                                                 <Skeleton className="h-6 w-6" />
                                                 <Skeleton className="h-8 w-8 rounded-md" />
@@ -86,34 +86,54 @@ const NutrientTracker: FC<NutrientTrackerProps> = ({
     dragOverItem,
     handleDragSort,
 }) => {
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const todayIndex = (new Date().getDay() + 6) % 7; // 0=Mon ... 6=Sun
+    const today = DAYS_OF_WEEK[todayIndex];
+
+    useEffect(() => {
+        if (!isClient || !scrollRef.current) return;
+        // Scroll so the today column is visible right after the sticky columns
+        // Each day column is ~110px wide; sticky area is ~210px
+        const stickyWidth = 210;
+        const colWidth = 110;
+        scrollRef.current.scrollLeft = todayIndex * colWidth;
+    }, [isClient, todayIndex]);
 
     if (!isClient) {
         return <NutrientTrackerSkeleton />;
     }
 
     return (
-        <Card className="w-full max-w-7xl shadow-lg">
-            <CardHeader>
-                <div className="flex items-center gap-4">
-                    <Image src={logo} alt="Nutrient Tracker Logo" width={40} height={40} />
-                    <CardTitle className="text-3xl font-headline">Nutrient Tracker</CardTitle>
+        <Card className="w-full shadow-lg">
+            <CardHeader className="pb-2">
+                <div className="flex items-center gap-3">
+                    <Image src={logo} alt="Nutrient Tracker Logo" width={32} height={32} />
+                    <CardTitle className="text-2xl font-headline">Nutrient Tracker</CardTitle>
                 </div>
-                <CardDescription>Marque sus porciones diarias para cada categoría de nutrientes a continuación.</CardDescription>
+                <CardDescription className="text-xs">Marque sus porciones diarias para cada categoría de nutrientes.</CardDescription>
             </CardHeader>
-            <CardContent>
-                <div className="overflow-x-auto">
-                    <Table>
+            <CardContent className="px-2">
+                <div ref={scrollRef} className="overflow-x-auto">
+                    <Table className="text-sm">
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-12"></TableHead>
-                                <TableHead className="font-bold min-w-[180px] text-base">Nutriente</TableHead>
-                                <TableHead className="font-bold min-w-[140px] text-base">Porciones Máx.</TableHead>
+                                {/* Sticky: drag handle */}
+                                <TableHead className="sticky left-0 z-20 bg-background w-8 p-1"></TableHead>
+                                {/* Sticky: Nutriente */}
+                                <TableHead className="sticky left-8 z-20 bg-background font-bold w-[120px] min-w-[120px] p-2 text-sm">
+                                    Nutriente
+                                </TableHead>
+                                {/* Sticky: Máx */}
+                                <TableHead className="sticky left-[128px] z-20 bg-background font-bold w-[52px] min-w-[52px] p-2 text-center text-sm">
+                                    Máx.
+                                </TableHead>
+                                {/* Scrollable day columns */}
                                 {DAYS_OF_WEEK.map(day => (
                                     <TableHead
                                         key={day}
                                         className={cn(
-                                            "text-center font-bold min-w-[120px] text-base",
-                                            isClient && day === DAYS_OF_WEEK[(new Date().getDay() + 6) % 7] ? "bg-sky-100/50 dark:bg-sky-900/30" : ""
+                                            "text-center font-bold min-w-[110px] w-[110px] p-2 text-sm",
+                                            day === today ? "bg-sky-100/80 dark:bg-sky-900/40" : ""
                                         )}
                                     >
                                         {day}
@@ -132,25 +152,28 @@ const NutrientTracker: FC<NutrientTrackerProps> = ({
                                     onDragOver={(e) => e.preventDefault()}
                                     className="cursor-grab active:cursor-grabbing"
                                 >
-                                    <TableCell className="text-center">
-                                        <GripVertical className="h-5 w-5 text-muted-foreground" />
+                                    {/* Sticky: drag handle */}
+                                    <TableCell className="sticky left-0 z-10 bg-background p-1 text-center">
+                                        <GripVertical className="h-4 w-4 text-muted-foreground" />
                                     </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-3">
+                                    {/* Sticky: Nutriente name */}
+                                    <TableCell className="sticky left-8 z-10 bg-background p-2">
+                                        <div className="flex items-center gap-2">
                                             {NUTRIENT_CONFIG[category].icon}
-                                            <span className="font-medium text-base">{NUTRIENT_CONFIG[category].name}</span>
+                                            <span className="font-medium text-sm leading-tight">{NUTRIENT_CONFIG[category].name}</span>
                                         </div>
                                     </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center justify-center">
-                                            <span className="font-mono text-base sm:text-lg w-6 text-center">{trackerData[category].maxPortions}</span>
-                                        </div>
+                                    {/* Sticky: max portions */}
+                                    <TableCell className="sticky left-[128px] z-10 bg-background p-2 text-center">
+                                        <span className="font-mono text-sm font-semibold">{trackerData[category].maxPortions}</span>
                                     </TableCell>
+                                    {/* Scrollable day cells */}
                                     {DAYS_OF_WEEK.map(day => (
                                         <TableCell
                                             key={day}
                                             className={cn(
-                                                isClient && day === DAYS_OF_WEEK[(new Date().getDay() + 6) % 7] ? "bg-sky-100/50 dark:bg-sky-900/30" : ""
+                                                "p-1",
+                                                day === today ? "bg-sky-100/80 dark:bg-sky-900/40" : ""
                                             )}
                                         >
                                             <PortionCell
@@ -166,8 +189,8 @@ const NutrientTracker: FC<NutrientTrackerProps> = ({
                     </Table>
                 </div>
             </CardContent>
-            <CardFooter className="flex justify-end">
-                <Button onClick={handleReset} variant="outline">
+            <CardFooter className="flex justify-end pt-2">
+                <Button onClick={handleReset} variant="outline" size="sm">
                     <RotateCcw className="mr-2 h-4 w-4" />
                     Resetear
                 </Button>

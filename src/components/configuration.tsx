@@ -121,7 +121,7 @@ const Configuration: FC<ConfigurationProps> = ({ trackerData, handleMaxPortionCh
                         showTrigger: new TimestampTrigger(notificationTime.getTime()),
                         silent: false,
                         icon: '/icon-192x192.png'
-                    });
+                    } as NotificationOptions);
                 } catch (e) {
                     console.error(`Error scheduling notification for ${meal.name}:`, e);
                 }
